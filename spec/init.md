@@ -1,0 +1,1 @@
+The project `happy-phone-llm` aims to be a self contained mobile LLM framework based on flutter.
