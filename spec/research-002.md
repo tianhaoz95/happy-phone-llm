@@ -72,18 +72,18 @@ These items will be addressed in subsequent phases but are important to keep in 
 
 **C++ (inference/):**
 
-*   `[ ]` Implement core LLM layers (Attention, FFN, etc.) in `inference/kernel` and `inference/engine`.
-*   `[ ]` Implement the main inference pipeline in `inference/engine`.
-*   `[ ]` Create a command-line interface for testing the C++ engine.
+*   `[x]` Implement core LLM layers (Attention, FFN, etc.) in `inference/kernel` and `inference/engine`.
+*   `[x]` Implement the main inference pipeline in `inference/engine`.
+*   `[x]` Create a command-line interface for testing the C++ engine.
 
 **Flutter (happy_phone_llm_flutter/ & example_app/):**
 
-*   `[ ]` Integrate the `happy_phone_llm_flutter` plugin into the `example_app`.
-*   `[ ]` Build a simple UI for text generation in `example_app`.
+*   `[x]` Integrate the `happy_phone_llm_flutter` plugin into the `example_app`.
+*   `[x]` Build a simple UI for text generation in `example_app`.
 
 **Python (model/):**
 
-*   `[ ]` Add support for different model architectures in `model/convert_to_gguf.py`.
+*   `[x]` Add support for different model architectures in `model/convert_to_gguf.py`.
 *   `[ ]` (Optional) Implement scripts for model training and finetuning.
 
 This plan provides a clear direction for the next phase of `happy-phone-llm` development, focusing on completing the core inference capabilities and integrating them into the example application.
