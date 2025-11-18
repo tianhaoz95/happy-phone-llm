@@ -1,0 +1,9 @@
+{
+  "useSmartEdit": "true",
+  "model": {
+    "name": "gemini-2.5-flash"
+  },
+  "ide": {
+    "enabled": false
+  }
+}
