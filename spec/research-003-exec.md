@@ -1,0 +1,1 @@
+implement the plan in `spec/research-003.md`. The qwen3-0.6b model is already downloaded in `model/Qwen3-0.6B`.
