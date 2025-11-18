@@ -71,25 +71,25 @@ The development will be divided into the following phases:
 
 **C++ (inference/):**
 
-*   `[ ]` Set up CMake build system.
-*   `[ ]` Implement GGUF file format loader.
-*   `[ ]` Implement tensor library and operations.
+*   `[x]` Set up CMake build system.
+*   `[x]` Implement GGUF file format loader.
+*   `[x]` Implement tensor library and operations.
 *   `[ ]` Implement core LLM layers (Attention, FFN, etc.).
 *   `[ ]` Implement the main inference pipeline.
-*   `[ ]` Create a C API for the inference engine.
-*   `[ ]` Write unit tests for the C++ code.
+*   `[x]` Create a C API for the inference engine.
+*   `[x]` Write unit tests for the C++ code.
 
 **Flutter (happy_phone_llm_flutter/):**
 
-*   `[ ]` Configure `ffigen` to generate Dart bindings.
-*   `[ ]` Implement the main Dart API class.
-*   `[ ]` Handle asynchronous communication with the C++ backend.
-*   `[ ]` Add platform-specific configurations for Android and iOS.
+*   `[x]` Configure `ffigen` to generate Dart bindings.
+*   `[x]` Implement the main Dart API class.
+*   `[x]` Handle asynchronous communication with the C++ backend.
+*   `[x]` Add platform-specific configurations for Android and iOS.
 
 **Python (model/):**
 
-*   `[ ]` Set up a Python environment with necessary dependencies.
-*   `[ ]` Implement the model conversion script.
+*   `[x]` Set up a Python environment with necessary dependencies.
+*   `[x]` Implement the model conversion script.
 *   `[ ]` Add support for different model architectures.
 
 This detailed plan provides a clear path forward for building the `happy-phone-llm` framework. By leveraging the strengths of C++ for performance and Flutter for cross-platform UI, we can create a powerful and easy-to-use mobile LLM solution.
