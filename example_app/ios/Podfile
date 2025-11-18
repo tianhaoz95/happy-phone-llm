@@ -1,0 +1,62 @@
+# platform :ios, '11.0' # Flutter's default is usually higher, check your project's info.plist
+platform :ios, '13.0' # Assuming a modern Flutter project
+
+# CocoaPods analytics
+# disable_custom_machine_name!
+
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+  # Add a post_install hook to copy the shared library
+  post_install do |installer|
+    installer.pods_project.targets.each do |target|
+      flutter_additional_ios_build_settings(target)
+
+      # Copy the C++ shared library
+      target.build_phases.each do |build_phase|
+        if build_phase.respond_to?(:name) && build_phase.name == '[CP] Embed Pods Frameworks'
+          script = <<-SCRIPT
+            echo "Copying libhappy_phone_llm_engine.dylib to Frameworks"
+            mkdir -p "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+            cp -f "${SRCROOT}/../../inference/build/libhappy_phone_llm_engine.dylib" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+          SCRIPT
+          shell_script_phase = target.new_shell_script_build_phase("Copy C++ Shared Library")
+          shell_script_phase.shell_script = script
+          shell_script_phase.show_env_vars_in_log = '0'
+          shell_script_phase.always_on_run_for_post_processing = '0'
+          shell_script_phase.dependency_file = ''
+        end
+      end
+    end
+  end
+end
+
+# This function is used to ensure that all your 'flutter' modules are installed
+# from their local path and that their dependencies are resolved.
+# For more information, see:
+# https://github.com/flutter/flutter/wiki/Upgrading-Flutter's-iOS-build-to-use-CocoaPods
+def flutter_install_all_ios_pods(flutter_application_path)
+  install_flutter_engine_pod
+  install_flutter_plugin_pods(flutter_application_path)
+end
+
+def install_flutter_engine_pod
+  pod 'Flutter', :path => File.join(flutter_root, 'bin', 'cache', 'artifacts', 'engine', 'iOS')
+end
+
+def install_flutter_plugin_pods(flutter_application_path)
+  # Add all Flutter plugins to the Podfile
+  # This is usually handled by `flutter_install_all_ios_pods`
+end
+
+def flutter_root
+  File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'flutter'))
+end
+
+def flutter_additional_ios_build_settings(target)
+  # This function is usually defined by Flutter's default Podfile
+  # For now, we'll leave it empty or add minimal settings if needed
+end

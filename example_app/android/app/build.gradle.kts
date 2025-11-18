@@ -42,3 +42,53 @@ android {
 flutter {
     source = "../.."
 }
+
+// Get NDK path from local.properties or environment variable
+val androidNdkPath = project.properties["android.ndkPath"] ?: System.getenv("ANDROID_NDK_HOME")
+if (androidNdkPath == null) {
+    throw GradleException("ANDROID_NDK_HOME environment variable or android.ndkPath in local.properties not set.")
+}
+
+// Path to the C++ build directory
+val cppBuildDir = project.file("../../../inference")
+
+// Define the ABIs to support
+val abis = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+
+abis.forEach { abi ->
+    val buildDirForAbi = cppBuildDir.resolve("build-android-$abi")
+    val jniLibsDir = file("src/main/jniLibs/$abi")
+
+    // Task to build the C++ library for a specific ABI
+    tasks.register<Exec>("buildCppForAndroid$abi") {
+        workingDir(cppBuildDir)
+        // Configure CMake
+        commandLine("cmake",
+                    "-S", cppBuildDir.absolutePath,
+                    "-B", buildDirForAbi.absolutePath,
+                    "-DCMAKE_TOOLCHAIN_FILE=$androidNdkPath/build/cmake/android.toolchain.cmake",
+                    "-DANDROID_ABI=$abi",
+                    "-DANDROID_PLATFORM=android-21",
+                    "-DCMAKE_BUILD_TYPE=Release")
+        // Build CMake project
+        doLast {
+            exec {
+                workingDir(buildDirForAbi)
+                commandLine("cmake", "--build", ".")
+            }
+        }
+        // Only run if the build directory doesn't exist or CMakeLists.txt has changed
+        inputs.file("../../../inference/CMakeLists.txt")
+        outputs.dir(buildDirForAbi)
+    }
+
+    // Task to copy the shared library for Android
+    tasks.register<Copy>("copyCppSharedLibrary$abi") {
+        dependsOn("buildCppForAndroid$abi") // Ensure C++ library is built first
+        from(buildDirForAbi.resolve("engine")) {
+            include("libhappy_phone_llm_engine.so")
+        }
+        into(jniLibsDir)
+    }
+    tasks.getByName("preBuild").dependsOn("copyCppSharedLibrary$abi")
+}

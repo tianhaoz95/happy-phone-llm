@@ -1,12 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:happy_phone_llm_flutter/happy_phone_llm_flutter.dart';
 
 void main() {
-  test('adds one to input values', () {
-    final calculator = Calculator();
-    expect(calculator.addOne(2), 3);
-    expect(calculator.addOne(-7), -6);
-    expect(calculator.addOne(0), 1);
+  test('HappyPhoneLlm can be instantiated', () {
+    // Set test mode to prevent native library loading during unit tests.
+    HappyPhoneLlm.setTestMode(true);
+    final llm = HappyPhoneLlm();
+    expect(llm, isNotNull);
+    // Reset test mode after the test.
+    HappyPhoneLlm.setTestMode(false);
   });
 }
