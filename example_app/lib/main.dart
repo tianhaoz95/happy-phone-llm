@@ -35,6 +35,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _promptController = TextEditingController();
   String _generatedText = "No text generated yet.";
   bool _isModelLoaded = false;
+  bool _isGenerating = false; // New state variable for loading indicator
 
   @override
   void initState() {
@@ -51,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loadModel() {
     // For now, we'll use a dummy path. In a real app, this would be a path to a GGUF file.
-    const String modelPath = "/path/to/your/model.gguf";
+    const String modelPath = "/data/local/tmp/model.gguf";
     try {
       _isModelLoaded = _llm.loadModel(modelPath);
       setState(() {
@@ -64,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _generateText() {
+  Future<void> _generateText() async { // Made asynchronous
     if (!_isModelLoaded) {
       setState(() {
         _generatedText = "Please load a model first.";
@@ -73,9 +74,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     setState(() {
       _generatedText = "Generating...";
+      _isGenerating = true; // Set loading state to true
     });
     try {
-      final String result = _llm.generate(_promptController.text, 50); // Generate up to 50 tokens
+      final String result = await _llm.generate(_promptController.text, 50); // Generate up to 50 tokens
       setState(() {
         _generatedText = result;
       });
@@ -83,7 +85,18 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _generatedText = "Error generating text: $e";
       });
+    } finally {
+      setState(() {
+        _isGenerating = false; // Set loading state to false
+      });
     }
+  }
+
+  void _clearText() {
+    _promptController.clear();
+    setState(() {
+      _generatedText = "No text generated yet.";
+    });
   }
 
   @override
@@ -108,19 +121,27 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(
-              onPressed: _loadModel,
+              onPressed: _isGenerating ? null : _loadModel, // Disable button while generating
               child: const Text('Load Model'),
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(
-              onPressed: _generateText,
+              onPressed: _isGenerating ? null : _generateText, // Disable button while generating
               child: const Text('Generate Text'),
             ),
             const SizedBox(height: 16.0),
-            const Text(
-              'Generated Text:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ElevatedButton(
+              onPressed: _isGenerating ? null : _clearText, // Disable button while generating
+              child: const Text('Clear'),
             ),
+            const SizedBox(height: 16.0),
+            if (_isGenerating) // Show loading indicator when generating
+              const Center(child: CircularProgressIndicator())
+            else
+              const Text(
+                'Generated Text:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             const SizedBox(height: 8.0),
             Expanded(
               child: SingleChildScrollView(

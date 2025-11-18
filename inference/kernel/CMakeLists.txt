@@ -5,6 +5,9 @@ project(happy_phone_llm_kernel CXX)
 add_library(happy_phone_llm_kernel STATIC
     kernel.cpp
     matrix_multiplication.cpp
+    attention.cpp
+    ffn.cpp
+    rmsnorm.cpp
 )
 
 target_include_directories(happy_phone_llm_kernel PUBLIC

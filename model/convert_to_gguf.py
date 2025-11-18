@@ -19,26 +19,60 @@ def convert_to_gguf(model_name_or_path, output_dir=".", filename="model.gguf"):
     model = AutoModelForCausalLM.from_pretrained(model_name_or_path)
 
     output_path = os.path.join(output_dir, filename)
-    gguf_writer = GGUFWriter(output_path, "llama") # Assuming Llama architecture for now
+
+    # Dynamically determine architecture
+    architecture = "unknown"
+    if model.config.architectures:
+        # e.g., LlamaForCausalLM -> Llama
+        architecture = model.config.architectures[0].replace("ForCausalLM", "").lower()
+
+    gguf_writer = GGUFWriter(output_path, architecture)
 
     # Add model metadata
-    gguf_writer.add_architecture("llama")
+    gguf_writer.add_architecture(architecture)
     gguf_writer.add_name(model_name_or_path)
-    gguf_writer.add_context_length(2048) # Placeholder
-    gguf_writer.add_embedding_length(model.config.hidden_size)
-    gguf_writer.add_block_count(model.config.num_hidden_layers)
-    gguf_writer.add_feed_forward_length(model.config.intermediate_size)
-    gguf_writer.add_rope_dimension(64) # Placeholder
-    gguf_writer.add_head_count(model.config.num_attention_heads)
-    gguf_writer.add_head_count_kv(model.config.num_key_value_heads)
-    gguf_writer.add_layer_norm_rms_eps(model.config.rms_norm_eps)
-    gguf_writer.add_tokenizer_model("llama")
-    gguf_writer.add_token_list([tokenizer.decode([i]) for i in range(tokenizer.vocab_size)])
+
+    # Conditional metadata extraction based on architecture
+    if architecture == "llama":
+        gguf_writer.add_context_length(getattr(model.config, "max_position_embeddings", 2048))
+        gguf_writer.add_embedding_length(model.config.hidden_size)
+        gguf_writer.add_block_count(model.config.num_hidden_layers)
+        gguf_writer.add_feed_forward_length(model.config.intermediate_size)
+        gguf_writer.add_rope_dimension(getattr(model.config, "rope_theta", 10000)) # Llama 2 uses rope_theta
+        gguf_writer.add_head_count(model.config.num_attention_heads)
+        gguf_writer.add_head_count_kv(getattr(model.config, "num_key_value_heads", model.config.num_attention_heads))
+        gguf_writer.add_layer_norm_rms_eps(model.config.rms_norm_eps)
+        gguf_writer.add_tokenizer_model("llama")
+        gguf_writer.add_token_list([tokenizer.decode([i]) for i in range(tokenizer.vocab_size)])
+    elif architecture == "mistral":
+        gguf_writer.add_context_length(getattr(model.config, "max_position_embeddings", 2048))
+        gguf_writer.add_embedding_length(model.config.hidden_size)
+        gguf_writer.add_block_count(model.config.num_hidden_layers)
+        gguf_writer.add_feed_forward_length(model.config.intermediate_size)
+        gguf_writer.add_rope_dimension(getattr(model.config, "rope_theta", 10000))
+        gguf_writer.add_head_count(model.config.num_attention_heads)
+        gguf_writer.add_head_count_kv(getattr(model.config, "num_key_value_heads", model.config.num_attention_heads))
+        gguf_writer.add_layer_norm_rms_eps(model.config.rms_norm_eps)
+        gguf_writer.add_tokenizer_model("llama") # Mistral often uses Llama tokenizer
+        gguf_writer.add_token_list([tokenizer.decode([i]) for i in range(tokenizer.vocab_size)])
+    # Add more architectures as needed (e.g., gemma, phi, etc.)
+    else:
+        print(f"Warning: Architecture '{architecture}' not explicitly handled. Using generic metadata.")
+        gguf_writer.add_context_length(getattr(model.config, "max_position_embeddings", 2048))
+        gguf_writer.add_embedding_length(getattr(model.config, "hidden_size", 0))
+        gguf_writer.add_block_count(getattr(model.config, "num_hidden_layers", 0))
+        gguf_writer.add_feed_forward_length(getattr(model.config, "intermediate_size", 0))
+        gguf_writer.add_head_count(getattr(model.config, "num_attention_heads", 0))
+        gguf_writer.add_head_count_kv(getattr(model.config, "num_key_value_heads", getattr(model.config, "num_attention_heads", 0)))
+        gguf_writer.add_layer_norm_rms_eps(getattr(model.config, "rms_norm_eps", 1e-5))
+        gguf_writer.add_tokenizer_model(getattr(tokenizer, "name_or_path", "unknown"))
+        gguf_writer.add_token_list([tokenizer.decode([i]) for i in range(tokenizer.vocab_size)])
 
     # Add model tensors (weights)
     for name, data in model.named_parameters():
         print(f"Adding tensor: {name} with shape {data.shape}")
-        # Convert to float32 and then to numpy array
+        # TODO: Implement specific tensor name remapping for different architectures
+        # For now, directly use the Hugging Face tensor names.
         gguf_writer.add_tensor(name, data.float().numpy())
 
     gguf_writer.write_header_to_file()

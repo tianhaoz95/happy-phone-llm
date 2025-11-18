@@ -16,4 +16,5 @@ target_include_directories(happy_phone_llm_engine PUBLIC
 target_link_libraries(happy_phone_llm_engine PUBLIC
     happy_phone_llm_gguf
     happy_phone_llm_tensor
+    happy_phone_llm_kernel
 )
