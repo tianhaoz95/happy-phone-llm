@@ -82,3 +82,5 @@ _CPack_Packages/
 .#*#
 
 /inference/build*
+
+.venv
