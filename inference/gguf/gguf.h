@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <variant> // For std::variant
 
 namespace gguf {
 
@@ -30,6 +31,12 @@ enum gguf_type {
     GGUF_TYPE_FLOAT64 = 12,
 };
 
+// Define a variant to hold different types of metadata values
+using GGUFMetadataValue = std::variant<
+    uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, float, bool, std::string, uint64_t, int64_t, double,
+    std::vector<uint8_t>, std::vector<int8_t>, std::vector<uint16_t>, std::vector<int16_t>, std::vector<uint32_t>, std::vector<int32_t>, std::vector<float>, std::vector<bool>, std::vector<std::string>, std::vector<uint64_t>, std::vector<int64_t>, std::vector<double>
+>;
+
 struct gguf_header {
     uint32_t magic;
     uint32_t version;
@@ -51,15 +58,25 @@ public:
     bool load_from_file(const std::string& filepath);
 
     const std::vector<gguf_tensor_info>& get_tensor_infos() const { return m_tensor_infos; }
-    const std::map<std::string, std::string>& get_metadata() const { return m_metadata; }
+    const std::map<std::string, GGUFMetadataValue>& get_metadata() const { return m_metadata; } // Changed type
     uint64_t get_tensor_data_offset() const { return m_tensor_data_offset; }
     uint32_t get_version() const { return m_header.version; }
 
+    // Add for memory mapping
+    ~GGUFReader(); // Destructor to unmap memory
+    const uint8_t* get_file_data() const { return m_file_data; }
+
 private:
     gguf_header m_header;
-    std::map<std::string, std::string> m_metadata;
+    std::map<std::string, GGUFMetadataValue> m_metadata; // Changed type
     std::vector<gguf_tensor_info> m_tensor_infos;
     uint64_t m_tensor_data_offset; // Stores the file offset where tensor data begins
+
+    // Memory mapping members
+    int m_file_descriptor;
+    size_t m_file_size;
+    uint8_t* m_file_data; // Pointer to the memory-mapped file data
+    size_t m_mapped_size; // The actual size of the mapped region
 };
 
 } // namespace gguf

@@ -6,8 +6,11 @@
 namespace happy_phone_llm {
 namespace kernel {
 
-// Forward declaration for feed-forward network function
-void ffn(tensor::Tensor& output, const tensor::Tensor& input, const tensor::Tensor& weight1, const tensor::Tensor& weight2, const tensor::Tensor& bias1, const tensor::Tensor& bias2);
+// Forward declaration for feed-forward network function (SwiGLU structure)
+void ffn(tensor::Tensor& output, const tensor::Tensor& input, const tensor::Tensor& w1, const tensor::Tensor& w2, const tensor::Tensor& w3);
+
+// Declaration for SiLU (Swish-gated Linear Unit) activation function
+void silu(tensor::Tensor& input);
 
 } // namespace kernel
 } // namespace happy_phone_llm

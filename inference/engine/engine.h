@@ -30,6 +30,12 @@ public:
     bool load(const std::string& filepath);
 
     const gguf::GGUFReader& get_gguf_reader() const { return m_gguf_reader; }
+    const tensor::Tensor& get_tensor(const std::string& name) const {
+        if (m_tensors.count(name)) {
+            return m_tensors.at(name);
+        }
+        throw std::runtime_error("Tensor not found: " + name);
+    }
 
     // Specific tensors for LLM layers (placeholders for now)
     tensor::Tensor token_embeddings;
@@ -58,12 +64,26 @@ public:
     bool load_model(const std::string& filepath);
     std::string generate(const std::string& prompt, int max_tokens);
 
+    // Tokenizer methods
+    std::vector<int> encode(const std::string& text);
+    std::string decode(const std::vector<int>& tokens);
+
 private:
     Model m_model;
-    // TODO: Add other inference-related members (e.g., context, tokenizer)
-    // For now, a simple tokenizer placeholder
-    std::map<int, std::string> m_tokenizer_id_to_token;
+    // Tokenizer members
+    std::vector<std::string> m_tokenizer_id_to_token; // Use vector for direct indexing by ID
     std::map<std::string, int> m_tokenizer_token_to_id;
+    std::vector<float> m_tokenizer_scores; // Token scores
+    std::vector<uint32_t> m_tokenizer_token_types; // Token types
+    int m_bos_token_id = -1; // Beginning of sentence token ID
+    int m_eos_token_id = -1; // End of sentence token ID
+    int m_unk_token_id = -1; // Unknown token ID
+    int m_pad_token_id = -1; // Padding token ID
+
+    uint32_t m_max_seq_len = 2048; // Maximum sequence length for KV cache
+    // KV Cache for generation
+    tensor::Tensor m_kv_cache_k;
+    tensor::Tensor m_kv_cache_v;
 };
 
 } // namespace engine

@@ -6,8 +6,27 @@
 namespace happy_phone_llm {
 namespace kernel {
 
-// Forward declaration for attention function
-void attention(tensor::Tensor& output, const tensor::Tensor& query, const tensor::Tensor& key, const tensor::Tensor& value, float scale);
+// Declaration for multi-head attention function
+void multi_head_attention(
+    tensor::Tensor& output,
+    const tensor::Tensor& input_tensor,
+    const tensor::Tensor& wq, // Query weights
+    const tensor::Tensor& wk, // Key weights
+    const tensor::Tensor& wv, // Value weights
+    const tensor::Tensor& wo, // Output weights
+    uint32_t n_head,
+    uint32_t n_embd,
+    uint32_t n_rot,
+    uint32_t position,
+    tensor::Tensor& kv_cache_k, // Key cache
+    tensor::Tensor& kv_cache_v  // Value cache
+);
+
+// Declaration for softmax function
+void softmax(tensor::Tensor& input);
+
+// Declaration for Rotary Position Embeddings (RoPE) function
+void rope(tensor::Tensor& input, uint32_t position, uint32_t n_rot);
 
 } // namespace kernel
 } // namespace happy_phone_llm

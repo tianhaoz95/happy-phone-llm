@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 
+namespace happy_phone_llm {
 namespace kernel {
 
 void matmul(const tensor::Tensor& A, const tensor::Tensor& B, tensor::Tensor& C) {
@@ -40,3 +41,4 @@ void matmul(const tensor::Tensor& A, const tensor::Tensor& B, tensor::Tensor& C)
 }
 
 } // namespace kernel
+} // namespace happy_phone_llm

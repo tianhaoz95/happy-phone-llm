@@ -73,7 +73,7 @@ void test_gguf_reader() {
     // Check metadata
     const auto& metadata = reader.get_metadata();
     assert(metadata.count("test.metadata") == 1);
-    assert(metadata.at("test.metadata") == "test_value");
+    assert(std::get<std::string>(metadata.at("test.metadata")) == "test_value");
 
     // Check tensor info
     const auto& tensor_infos = reader.get_tensor_infos();
