@@ -21,7 +21,7 @@ echo "Virtual environment activated."
 
 # Install dependencies
 echo "Installing Python dependencies from requirements.txt..."
-pip install -r requirements.txt
+pip install -r model/requirements.txt
 
 echo "Python environment setup complete."
 echo "To activate the environment, run: source $VENV_DIR/bin/activate"

@@ -53,6 +53,7 @@ public:
     const std::vector<gguf_tensor_info>& get_tensor_infos() const { return m_tensor_infos; }
     const std::map<std::string, std::string>& get_metadata() const { return m_metadata; }
     uint64_t get_tensor_data_offset() const { return m_tensor_data_offset; }
+    uint32_t get_version() const { return m_header.version; }
 
 private:
     gguf_header m_header;

@@ -52,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loadModel() {
     // For now, we'll use a dummy path. In a real app, this would be a path to a GGUF file.
-    const String modelPath = "/data/local/tmp/model.gguf";
+    const String modelPath = "/data/local/tmp/qwen3-0.6b.gguf";
     try {
       _isModelLoaded = _llm.loadModel(modelPath);
       setState(() {

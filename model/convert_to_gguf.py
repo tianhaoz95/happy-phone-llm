@@ -29,7 +29,7 @@ def convert_to_gguf(model_name_or_path, output_dir=".", filename="model.gguf"):
     gguf_writer = GGUFWriter(output_path, architecture)
 
     # Add model metadata
-    gguf_writer.add_architecture(architecture)
+    gguf_writer.add_architecture()
     gguf_writer.add_name(model_name_or_path)
 
     # Conditional metadata extraction based on architecture
@@ -55,6 +55,17 @@ def convert_to_gguf(model_name_or_path, output_dir=".", filename="model.gguf"):
         gguf_writer.add_layer_norm_rms_eps(model.config.rms_norm_eps)
         gguf_writer.add_tokenizer_model("llama") # Mistral often uses Llama tokenizer
         gguf_writer.add_token_list([tokenizer.decode([i]) for i in range(tokenizer.vocab_size)])
+    elif architecture == "qwen3":
+        gguf_writer.add_context_length(getattr(model.config, "max_position_embeddings", 32768))
+        gguf_writer.add_embedding_length(model.config.hidden_size)
+        gguf_writer.add_block_count(model.config.num_hidden_layers)
+        gguf_writer.add_feed_forward_length(model.config.intermediate_size)
+        gguf_writer.add_rope_dimension_count(getattr(model.config, "rope_theta", 10000)) # Qwen uses rope_theta
+        gguf_writer.add_head_count(model.config.num_attention_heads)
+        gguf_writer.add_head_count_kv(getattr(model.config, "num_key_value_heads", model.config.num_attention_heads))
+        gguf_writer.add_layer_norm_rms_eps(model.config.rms_norm_eps)
+        gguf_writer.add_tokenizer_model("qwen") # Qwen has its own tokenizer
+        gguf_writer.add_token_list([tokenizer.decode([i]) for i in range(tokenizer.vocab_size)])
     # Add more architectures as needed (e.g., gemma, phi, etc.)
     else:
         print(f"Warning: Architecture '{architecture}' not explicitly handled. Using generic metadata.")
@@ -73,7 +84,7 @@ def convert_to_gguf(model_name_or_path, output_dir=".", filename="model.gguf"):
         print(f"Adding tensor: {name} with shape {data.shape}")
         # TODO: Implement specific tensor name remapping for different architectures
         # For now, directly use the Hugging Face tensor names.
-        gguf_writer.add_tensor(name, data.float().numpy())
+        gguf_writer.add_tensor(name, data.detach().float().numpy())
 
     gguf_writer.write_header_to_file()
     gguf_writer.write_kv_data_to_file()
