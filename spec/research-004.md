@@ -79,9 +79,9 @@ The `LLM::generate` function needs to orchestrate the layers.
 *   `[ ]` Implement memory mapping for `gguf::GGUFReader` for efficient tensor loading.
 *   `[ ]` Extend `gguf::GGUFReader` to correctly parse array metadata (tokenizer tokens).
 *   `[ ]` Implement a functional tokenizer (encode/decode) using GGUF metadata in `engine.cpp`.
-*   `[ ]` Implement the RMSNorm layer in `inference/kernel`.
-*   `[ ]` Implement Multi-head Attention with RoPE and KV cache in `inference/kernel`.
-*   `[ ]` Implement Feed-Forward Network and activation functions in `inference/kernel`.
+*   `[x]` Implement the RMSNorm layer in `inference/kernel`.
+*   `[x]` Implement Multi-head Attention with RoPE and KV cache in `inference/kernel`.
+*   `[x]` Implement Feed-Forward Network and activation functions in `inference/kernel`.
 *   `[ ]` Refine the `LLM::generate` loop to perform actual LLM inference using implemented layers.
 *   `[ ]` Implement a basic sampling strategy (e.g., argmax).
 *   `[ ]` Re-enable full model loading in `Model::load` and remove all previous workarounds.
