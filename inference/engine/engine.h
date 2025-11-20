@@ -44,12 +44,24 @@ public:
     tensor::Tensor w1, w2, w3;     // FFN weights (for SwiGLU or similar)
     tensor::Tensor output_weight;
 
+    // Rule of Five for resource management:
+    // Delete copy constructor and copy assignment operator
+    Model(const Model&) = delete;
+    Model& operator=(const Model&) = delete;
+
+    // Declare move constructor and move assignment operator
+    Model(Model&& other) noexcept;
+    Model& operator=(Model&& other) noexcept;
+
     // Model parameters
     uint32_t n_vocab = 0;
     uint32_t n_embd = 0;
     uint32_t n_head = 0;
+    uint32_t n_kv_head = 0; // Add n_kv_head
     uint32_t n_layer = 0;
     uint32_t n_rot = 0; // Rotary embeddings
+    uint32_t head_dim_q = 0; // Dimension of each query attention head
+    uint32_t head_dim_kv = 0; // Dimension of each key/value attention head
     float norm_eps = 1e-5; // Epsilon for RMSNorm
 
 private:

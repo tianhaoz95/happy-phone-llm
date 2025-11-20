@@ -4,12 +4,12 @@ from gguf import GGUFWriter
 
 def create_dummy_gguf(output_dir=".", filename="dummy_model.gguf"):
     """
-    Creates a very small, dummy GGUF model file for unit testing purposes.
+    Creates a very small, dummy GGUF model for unit testing purposes.
     """
     output_path = f"{output_dir}/{filename}"
 
     # Define dummy model parameters
-    architecture = "dummy"
+    architecture = "llama"
     vocab_size = 16  # Small vocabulary
     embedding_length = 32
     num_layers = 1
@@ -36,6 +36,11 @@ def create_dummy_gguf(output_dir=".", filename="dummy_model.gguf"):
     
     # Add dummy tokenizer info
     gguf_writer.add_tokenizer_model("dummy")
+    gguf_writer.add_uint32("tokenizer.ggml.model.n_vocab", vocab_size)
+    gguf_writer.add_int32("tokenizer.ggml.bos_token_id", 13)
+    gguf_writer.add_int32("tokenizer.ggml.eos_token_id", 14)
+    gguf_writer.add_int32("tokenizer.ggml.unk_token_id", 12)
+    gguf_writer.add_int32("tokenizer.ggml.pad_token_id", 15)
     
     # Create a dummy token list
     dummy_tokens = [f"token_{i}" for i in range(vocab_size - 4)] # regular tokens
@@ -54,6 +59,10 @@ def create_dummy_gguf(output_dir=".", filename="dummy_model.gguf"):
     input_layernorm_weight_0 = np.random.rand(embedding_length).astype(np.float32)
     gguf_writer.add_tensor(f"model.layers.0.input_layernorm.weight", input_layernorm_weight_0)
 
+    # 2b. Post Attention LayerNorm for the first block
+    post_attention_layernorm_weight_0 = np.random.rand(embedding_length).astype(np.float32)
+    gguf_writer.add_tensor(f"model.layers.0.post_attention_layernorm.weight", post_attention_layernorm_weight_0)
+
     # 3. Attention projections for the first block
     q_proj_weight_0 = np.random.rand(embedding_length, embedding_length).astype(np.float32)
     gguf_writer.add_tensor(f"model.layers.0.self_attn.q_proj.weight", q_proj_weight_0)
@@ -68,18 +77,18 @@ def create_dummy_gguf(output_dir=".", filename="dummy_model.gguf"):
     gguf_writer.add_tensor(f"model.layers.0.self_attn.o_proj.weight", o_proj_weight_0)
 
     # 4. MLP projections for the first block (FFN)
-    gate_proj_weight_0 = np.random.rand(intermediate_size, embedding_length).astype(np.float32)
+    gate_proj_weight_0 = np.random.rand(embedding_length, intermediate_size).astype(np.float32)
     gguf_writer.add_tensor(f"model.layers.0.mlp.gate_proj.weight", gate_proj_weight_0)
 
-    up_proj_weight_0 = np.random.rand(intermediate_size, embedding_length).astype(np.float32)
+    up_proj_weight_0 = np.random.rand(embedding_length, intermediate_size).astype(np.float32)
     gguf_writer.add_tensor(f"model.layers.0.mlp.up_proj.weight", up_proj_weight_0)
 
-    down_proj_weight_0 = np.random.rand(embedding_length, intermediate_size).astype(np.float32)
+    down_proj_weight_0 = np.random.rand(intermediate_size, embedding_length).astype(np.float32)
     gguf_writer.add_tensor(f"model.layers.0.mlp.down_proj.weight", down_proj_weight_0)
     
     # 5. Final LayerNorm (model.norm)
     model_norm_weight = np.random.rand(embedding_length).astype(np.float32)
-    gguf_writer.add_tensor("model.norm.weight", model_norm_weight)
+    gguf_writer.add_tensor("output_norm.weight", model_norm_weight)
 
     # 6. Output projection (language model head)
     output_weight = np.random.rand(vocab_size, embedding_length).astype(np.float32)

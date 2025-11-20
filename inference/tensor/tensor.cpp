@@ -8,6 +8,7 @@ namespace tensor {
 uint64_t Tensor::get_element_size(DataType dtype) {
     switch (dtype) {
         case F32: return sizeof(float);
+        case F16: return sizeof(float); // Treat F16 as float for now
         case I32: return sizeof(int32_t);
         default: throw std::runtime_error("Unsupported data type");
     }
@@ -93,6 +94,30 @@ void Tensor::resize(const std::vector<uint64_t>& new_shape) {
     m_shape = new_shape;
     m_size = new_total_size;
 }
+
+Tensor Tensor::transpose() const {
+    if (m_shape.size() != 2) {
+        throw std::runtime_error("Transpose currently only supports 2D tensors.");
+    }
+
+    uint64_t rows = m_shape[0];
+    uint64_t cols = m_shape[1];
+
+    std::vector<uint64_t> transposed_shape = {cols, rows};
+    Tensor transposed_tensor(transposed_shape, m_dtype);
+
+    const float* original_data = reinterpret_cast<const float*>(m_data);
+    float* transposed_data = reinterpret_cast<float*>(transposed_tensor.data());
+
+    for (uint64_t i = 0; i < rows; ++i) {
+        for (uint64_t j = 0; j < cols; ++j) {
+            transposed_data[j * rows + i] = original_data[i * cols + j];
+        }
+    }
+
+    return transposed_tensor;
+}
+
 
 
 } // namespace tensor

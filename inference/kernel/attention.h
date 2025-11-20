@@ -17,6 +17,9 @@ void multi_head_attention(
     uint32_t n_head,
     uint32_t n_embd,
     uint32_t n_rot,
+    uint32_t head_dim_q, // Add head_dim_q
+    uint32_t head_dim_kv, // Add head_dim_kv
+    uint32_t n_kv_head, // Add n_kv_head
     uint32_t position,
     tensor::Tensor& kv_cache_k, // Key cache
     tensor::Tensor& kv_cache_v  // Value cache

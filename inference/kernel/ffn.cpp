@@ -36,7 +36,7 @@ void ffn(tensor::Tensor& output, const tensor::Tensor& input, const tensor::Tens
     // output: [1, n_embd]
 
     uint64_t n_embd = input.shape()[1];
-    uint64_t intermediate_size = w1.shape()[1];
+    uint64_t intermediate_size = w2.shape()[0];
 
     if (w1.shape()[0] != n_embd || w3.shape()[0] != n_embd || w2.shape()[1] != n_embd ||
         w1.shape()[1] != w3.shape()[1] || w2.shape()[0] != intermediate_size) {
@@ -46,16 +46,16 @@ void ffn(tensor::Tensor& output, const tensor::Tensor& input, const tensor::Tens
         throw std::runtime_error("FFN: Output tensor shape is incorrect.");
     }
 
-    // 1. Linear projection for gate: gate_proj = input @ w3
+    // 1. Linear projection for gate: gate_proj = input @ w1
     tensor::Tensor gate_proj({1, intermediate_size}, tensor::F32);
-    kernel::matmul(input, w3, gate_proj);
+    kernel::matmul(input, w1, gate_proj);
 
     // 2. Apply SiLU: activated_gate = SiLU(gate_proj)
     kernel::silu(gate_proj);
 
-    // 3. Linear projection for hidden: hidden_proj = input @ w1
+    // 3. Linear projection for hidden: hidden_proj = input @ w3
     tensor::Tensor hidden_proj({1, intermediate_size}, tensor::F32);
-    kernel::matmul(input, w1, hidden_proj);
+    kernel::matmul(input, w3, hidden_proj);
 
     // 4. Element-wise multiplication: intermediate = hidden_proj * activated_gate
     tensor::Tensor intermediate({1, intermediate_size}, tensor::F32);

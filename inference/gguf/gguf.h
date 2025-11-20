@@ -65,12 +65,24 @@ public:
     // Add for memory mapping
     ~GGUFReader(); // Destructor to unmap memory
     const uint8_t* get_file_data() const { return m_file_data; }
+    size_t get_file_size() const { return m_file_size; }
+    size_t get_mapped_size() const { return m_mapped_size; }
+
+    // Rule of Five for resource management:
+    // Delete copy constructor and copy assignment operator
+    GGUFReader(const GGUFReader&) = delete;
+    GGUFReader& operator=(const GGUFReader&) = delete;
+
+    // Declare move constructor and move assignment operator
+    GGUFReader(GGUFReader&& other) noexcept;
+    GGUFReader& operator=(GGUFReader&& other) noexcept;
 
 private:
     gguf_header m_header;
     std::map<std::string, GGUFMetadataValue> m_metadata; // Changed type
     std::vector<gguf_tensor_info> m_tensor_infos;
     uint64_t m_tensor_data_offset; // Stores the file offset where tensor data begins
+    uint64_t m_metadata_data_offset; // Stores the file offset where metadata begins
 
     // Memory mapping members
     int m_file_descriptor;

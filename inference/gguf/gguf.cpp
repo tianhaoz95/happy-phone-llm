@@ -11,6 +11,13 @@
 
 namespace gguf {
 
+// Helper to align the memory pointer
+static void align_ptr(const uint8_t*& ptr, size_t alignment) {
+    uintptr_t current_address = reinterpret_cast<uintptr_t>(ptr);
+    uintptr_t aligned_address = (current_address + alignment - 1) & ~(alignment - 1);
+    ptr = reinterpret_cast<const uint8_t*>(aligned_address);
+}
+
 // Helper to read a uint8_t from the current memory pointer and advance it
 static uint8_t read_u8_mmap(const uint8_t*& ptr) {
     uint8_t value;
@@ -134,84 +141,100 @@ static GGUFMetadataValue read_gguf_value_mmap(const uint8_t*& ptr, gguf_type typ
             gguf_type array_type = read_gguf_type_mmap(ptr);
             uint64_t array_len = read_u64_mmap(ptr);
 
+            GGUFMetadataValue array_value; // Temporary variable to hold the result
+
             // Read array elements into a vector based on array_type
             switch (array_type) {
                 case GGUF_TYPE_UINT8: {
                     std::vector<uint8_t> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_u8_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_INT8: {
                     std::vector<int8_t> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_i8_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_UINT16: {
                     std::vector<uint16_t> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_u16_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_INT16: {
                     std::vector<int16_t> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_i16_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_UINT32: {
                     std::vector<uint32_t> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_u32_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_INT32: {
                     std::vector<int32_t> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_i32_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_FLOAT32: {
                     std::vector<float> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_f32_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_BOOL: {
                     std::vector<bool> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_bool_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_STRING: {
                     std::vector<std::string> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_string_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_UINT64: {
                     std::vector<uint64_t> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_u64_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_INT64: {
                     std::vector<int64_t> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_i64_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 case GGUF_TYPE_FLOAT64: {
                     std::vector<double> vec;
                     vec.reserve(array_len);
                     for (uint64_t i = 0; i < array_len; ++i) vec.push_back(read_f64_mmap(ptr));
-                    return vec;
+                    array_value = vec;
+                    break;
                 }
                 default:
                     std::cerr << "Error: Unknown GGUF array metadata type encountered: " << array_type << std::endl;
-                    return GGUFMetadataValue(); // Return an empty variant
+                    array_value = GGUFMetadataValue(); // Return an empty variant
+                    break;
             }
+            return array_value; // Explicit return for GGUF_TYPE_ARRAY case
         }
         default:
             std::cerr << "Error: Unknown GGUF metadata type encountered: " << type << std::endl;
@@ -234,6 +257,59 @@ GGUFReader::~GGUFReader() {
         }
         m_file_descriptor = -1;
     }
+}
+
+// Move Constructor
+GGUFReader::GGUFReader(GGUFReader&& other) noexcept
+    : m_header(std::move(other.m_header)),
+      m_metadata(std::move(other.m_metadata)),
+      m_tensor_infos(std::move(other.m_tensor_infos)),
+      m_tensor_data_offset(other.m_tensor_data_offset),
+      m_metadata_data_offset(other.m_metadata_data_offset),
+      m_file_descriptor(other.m_file_descriptor),
+      m_file_size(other.m_file_size),
+      m_file_data(other.m_file_data),
+      m_mapped_size(other.m_mapped_size) {
+    // Nullify other's pointers to prevent double-free
+    other.m_file_descriptor = -1;
+    other.m_file_data = nullptr;
+    other.m_file_size = 0;
+    other.m_mapped_size = 0;
+}
+
+// Move Assignment Operator
+GGUFReader& GGUFReader::operator=(GGUFReader&& other) noexcept {
+    if (this != &other) {
+        // Release own resources first
+        if (m_file_data != nullptr) {
+            if (munmap(m_file_data, m_mapped_size) == -1) {
+                std::cerr << "Error: Failed to munmap memory in move assignment." << std::endl;
+            }
+        }
+        if (m_file_descriptor != -1) {
+            if (close(m_file_descriptor) == -1) {
+                std::cerr << "Error: Failed to close file descriptor in move assignment." << std::endl;
+            }
+        }
+
+        // Transfer resources from other
+        m_header = std::move(other.m_header);
+        m_metadata = std::move(other.m_metadata);
+        m_tensor_infos = std::move(other.m_tensor_infos);
+        m_tensor_data_offset = other.m_tensor_data_offset;
+        m_metadata_data_offset = other.m_metadata_data_offset;
+        m_file_descriptor = other.m_file_descriptor;
+        m_file_size = other.m_file_size;
+        m_file_data = other.m_file_data;
+        m_mapped_size = other.m_mapped_size;
+
+        // Nullify other's pointers
+        other.m_file_descriptor = -1;
+        other.m_file_data = nullptr;
+        other.m_file_size = 0;
+        other.m_mapped_size = 0;
+    }
+    return *this;
 }
 
 bool GGUFReader::load_from_file(const std::string& filepath) {
@@ -267,13 +343,13 @@ bool GGUFReader::load_from_file(const std::string& filepath) {
     // A pointer that will advance through the mapped memory
     const uint8_t* current_ptr = m_file_data;
 
-    // Read header
-    std::memcpy(&m_header.magic, current_ptr, sizeof(m_header.magic));
-    current_ptr += sizeof(m_header.magic);
-    std::memcpy(&m_header.version, current_ptr, sizeof(m_header.version));
-    current_ptr += sizeof(m_header.version);
+    // Read header - these are kept as they are needed for basic file validity check
+    m_header.magic = read_u32_mmap(current_ptr);
+    m_header.version = read_u32_mmap(current_ptr);
     m_header.tensor_count = read_u64_mmap(current_ptr);
     m_header.metadata_kv_count = read_u64_mmap(current_ptr);
+
+    m_metadata_data_offset = current_ptr - m_file_data; // Capture the start of metadata section
 
     if (m_header.magic != GGUF_MAGIC) {
         std::cerr << "Error: Invalid GGUF magic number." << std::endl;
@@ -289,19 +365,19 @@ bool GGUFReader::load_from_file(const std::string& filepath) {
               << ", Tensors: " << m_header.tensor_count
               << ", Metadata: " << m_header.metadata_kv_count << std::endl;
 
+    current_ptr = m_file_data + m_metadata_data_offset; // Reset current_ptr to start of metadata section
+
     // Read metadata
     for (uint64_t i = 0; i < m_header.metadata_kv_count; ++i) {
         std::string key = read_string_mmap(current_ptr);
         gguf_type type = read_gguf_type_mmap(current_ptr);
         m_metadata[key] = read_gguf_value_mmap(current_ptr, type);
-    }
-
+    } // Added logging
     // Read tensor info
     for (uint64_t i = 0; i < m_header.tensor_count; ++i) {
         gguf_tensor_info tensor_info;
         tensor_info.name = read_string_mmap(current_ptr);
-        std::memcpy(&tensor_info.n_dims, current_ptr, sizeof(tensor_info.n_dims));
-        current_ptr += sizeof(tensor_info.n_dims);
+        tensor_info.n_dims = read_u32_mmap(current_ptr);
         for (uint32_t j = 0; j < tensor_info.n_dims; ++j) {
             tensor_info.ne[j] = read_u64_mmap(current_ptr);
         }

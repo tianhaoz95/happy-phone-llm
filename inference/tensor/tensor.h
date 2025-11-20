@@ -9,6 +9,7 @@ namespace tensor {
 
 enum DataType {
     F32,
+    F16, // Add this
     I32,
     // Add more data types as needed
 };
@@ -37,6 +38,9 @@ public:
     // Resize the tensor, reallocating memory if owned.
     // Data is not preserved.
     void resize(const std::vector<uint64_t>& new_shape);
+
+    // Transpose a 2D tensor, returning a new Tensor.
+    Tensor transpose() const;
 
     static uint64_t get_element_size(DataType dtype);
 
